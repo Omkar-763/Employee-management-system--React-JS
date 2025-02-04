@@ -1052,7 +1052,7 @@ const Index = () => {
                                             <div className="flex">
                                                 <img className="w-8 h-8 rounded-md ltr:mr-3 rtl:ml-3 object-cover" src="/assets/images/product-laptop.jpg" alt="avatar" />
                                                 <p className="whitespace-nowrap">
-                                                    Laptop <span className="text-primary block text-xs">Digital</span>
+                                                    Laptop <span className="text-danger block text-xs">Digital</span>
                                                 </p>
                                             </div>
                                         </td>
