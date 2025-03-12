@@ -99,7 +99,8 @@ const QuillEditor = lazy(() => import('../pages/Forms/QuillEditor'));
 const MarkDownEditor = lazy(() => import('../pages/Forms/MarkDownEditor'));
 const DateRangePicker = lazy(() => import('../pages/Forms/DateRangePicker'));
 const Clipboard = lazy(() => import('../pages/Forms/Clipboard'));
-
+const Reports = lazy(() => import('../pages/Admin/Reports'));
+const ManageUsers = lazy(()=> import ('../pages/Admin/ManageUsers'));
 const routes = [
     // dashboard
     {
@@ -157,6 +158,15 @@ const routes = [
     {
         path: '/apps/calendar',
         element: <Calendar />,
+    },
+    //admin page
+    {
+        path: '/admin/reports',
+        element: <Reports/>,
+    },
+    {
+        path: '/admin/users',
+        element: <ManageUsers/>,
     },
     // preview page
     {
