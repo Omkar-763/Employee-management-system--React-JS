@@ -729,12 +729,21 @@ import IconMenuCalendar from '../Icon/Menu/IconMenuCalendar';
 
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
+    const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const dispatch = useDispatch();
     const location = useLocation();
     const { t } = useTranslation();
     
-    // Get user role from localStorage
-    const isAdmin = JSON.parse(localStorage.getItem('isAdmin') || 'false');
+    // Safely get user role from localStorage
+    useEffect(() => {
+        try {
+            const adminStatus = localStorage.getItem('isAdmin');
+            setIsAdmin(adminStatus ? JSON.parse(adminStatus) : false);
+        } catch (error) {
+            console.error('Error parsing admin status:', error);
+            setIsAdmin(false);
+        }
+    }, []);
 
     const toggleMenu = (value: string) => {
         setCurrentMenu((oldValue) => (oldValue === value ? '' : value));
@@ -757,7 +766,7 @@ const Sidebar = () => {
                     <div className="flex justify-between items-center px-4 py-3">
                         <NavLink to="/" className="main-logo flex items-center">
                             <img className="w-8" src="/assets/images/logo.svg" alt="logo" />
-                            <span className="text-2xl font-semibold text-black dark:text-white">Employee Management</span>
+                            <span className="text-2xl font-semibold text-black dark:text-white">Vristo</span>
                         </NavLink>
 
                         <button
@@ -788,7 +797,7 @@ const Sidebar = () => {
 
                             {/* Chat - Visible for all users */}
                             <li className="nav-item">
-                                <NavLink to="/apps/chat" className="group">
+                                <NavLink to="/apps/chats" className="group">
                                     <div className="flex items-center">
                                         <IconMenuChat className="shrink-0" />
                                         <span className="pl-3 text-black dark:text-white">{t('Chat')}</span>

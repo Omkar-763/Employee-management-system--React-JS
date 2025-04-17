@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+const ProfileDropdown = lazy(()=>import('../dropdowns/ProfileDropdown'));
 const Index = lazy(() => import('../pages/Index'));
 const Analytics = lazy(() => import('../pages/Analytics'));
 const Finance = lazy(() => import('../pages/Finance'));
@@ -104,6 +105,14 @@ const ManageUsers = lazy(()=> import ('../pages/Admin/ManageUsers'));
 const routes = [
     // dashboard
     {
+        path: '/dropdown/profile-dropdown',
+        element: <ProfileDropdown/>
+    },
+    // {
+    //     path: '/',
+    //     element: <Index />,
+    // },
+    {
         path: '/',
         element: <Index />,
     },
@@ -148,7 +157,7 @@ const routes = [
     },
     // Apps page
     {
-        path: '/apps/chat',
+        path: '/apps/chats',
         element: <Chat />,
     },
     {

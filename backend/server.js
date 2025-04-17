@@ -1,177 +1,136 @@
-const express = require("express");
-const mysql = require("mysql");
-const cors = require("cors");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
+require('dotenv').config();
+const express = require('express');
+const mysql = require('mysql');
+const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
-// Database Connection
+// Database connection - UPDATE THESE VALUES TO MATCH YOUR DB
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "", // Default MySQL password in XAMPP
-  database: "test_db",
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '', // Empty password as shown in your setup
+  database: process.env.DB_NAME || 'test_db' // Your database name
 });
 
-db.connect((err) => {
+db.connect(err => {
   if (err) {
-    console.error("Database Connection Failed!", err);
-  } else {
-    console.log("Connected to MySQL Database");
+    console.error('Database connection failed:', err);
+    process.exit(1);
   }
+  console.log('Connected to your MySQL database');
 });
 
-const SECRET_KEY = "your_secret_key"; // Change this to a secure key
+const SECRET_KEY = process.env.JWT_SECRET || 'your_jwt_secret_key';
 
-// Middleware to check if the user is an admin
-const isAdmin = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Access denied. No token provided." });
-
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    if (!decoded.isAdmin) return res.status(403).json({ error: "Access denied. Not an admin." });
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(400).json({ error: "Invalid token." });
-  }
-};
-
-// **Sign Up (Register)**
-app.post("/register", async (req, res) => {
+// User registration endpoint
+app.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
 
-  // Check if the user is the first one to register (admin)
-  const checkAdminQuery = "SELECT COUNT(*) AS count FROM users";
-  db.query(checkAdminQuery, async (err, results) => {
-    if (err) return res.json({ error: err.message });
+  try {
+    // Check if email exists
+    db.query('SELECT email FROM users WHERE email = ?', [email], async (err, results) => {
+      if (err) throw err;
+      
+      if (results.length > 0) {
+        return res.status(400).json({ error: 'Email already exists' });
+      }
 
-    const isFirstUser = results[0].count === 0;
-    const isAdmin = isFirstUser; // First user is admin
-    const hashedPassword = await bcrypt.hash(password, 10);
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Create user (first user becomes admin)
+      db.query('SELECT COUNT(*) as count FROM users', (err, countResults) => {
+        const isAdmin = countResults[0].count === 0;
+        
+        db.query(
+          'INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)',
+          [name, email, hashedPassword, isAdmin],
+          (err, result) => {
+            if (err) throw err;
+            
+            const token = jwt.sign(
+              { id: result.insertId, email, isAdmin },
+              SECRET_KEY,
+              { expiresIn: '24h' }
+            );
+            
+            res.status(201).json({
+              message: 'User registered successfully',
+              token,
+              user: {
+                id: result.insertId,
+                name,
+                email,
+                isAdmin
+              }
+            });
+          }
+        );
+      });
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
-    const sql = "INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)";
-    db.query(sql, [name, email, hashedPassword, isAdmin], (err, result) => {
-      if (err) return res.json({ error: err.message });
-      res.json({ message: "User registered successfully", isAdmin });
+// User login endpoint
+app.post('/login', (req, res) => {
+  const { email, password } = req.body;
+
+  db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (results.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const user = results[0];
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' });
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, isAdmin: user.is_admin },
+      SECRET_KEY,
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        isAdmin: user.is_admin
+      }
     });
   });
 });
 
-// **Sign In (Login)**
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-  const sql = "SELECT * FROM users WHERE email = ?";
+// Get user profile endpoint
+app.get('/user-info', (req, res) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
 
-  db.query(sql, [email], async (err, results) => {
-    if (err) return res.json({ error: err.message });
-    if (results.length === 0) return res.status(401).json({ error: "User not found" });
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    db.query(
+      'SELECT id, name, email, is_admin FROM users WHERE id = ?',
+      [decoded.id],
+      (err, results) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        if (results.length === 0) return res.status(404).json({ error: 'User not found' });
 
-    const user = results[0];
-
-    // Compare password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
-
-    // Generate JWT token
-    const token = jwt.sign({ id: user.id, email: user.email, isAdmin: user.is_admin }, SECRET_KEY, { expiresIn: "1h" });
-
-    res.json({ message: "Login successful", token, isAdmin: user.is_admin });
-  });
+        res.json(results[0]);
+      }
+    );
+  } catch (err) {
+    res.status(401).json({ error: 'Invalid token' });
+  }
 });
 
-// **Promote a User to Admin** (Admin-only route)
-app.post("/promote-to-admin", isAdmin, (req, res) => {
-  const { userId } = req.body;
-
-  const sql = "UPDATE users SET is_admin = TRUE WHERE id = ?";
-  db.query(sql, [userId], (err, result) => {
-    if (err) return res.json({ error: err.message });
-    res.json({ message: "User promoted to admin successfully" });
-  });
-});
-
-// **Admin-Only Route Example**
-app.get("/admin-only-route", isAdmin, (req, res) => {
-  res.json({ message: "This is an admin-only route" });
-});
-
-// Start Server
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
-});
-// const express = require("express");
-// const mysql = require("mysql");
-// const cors = require("cors");
-// const bcrypt = require("bcryptjs");
-// const jwt = require("jsonwebtoken");
-// require("dotenv").config();
-
-// const app = express();
-// app.use(express.json());
-// app.use(cors());
-
-// // Database Connection
-// const db = mysql.createConnection({
-//   host: "localhost",
-//   user: "root",
-//   password: "", // Default MySQL password in XAMPP
-//   database: "test_db",
-// });
-
-// db.connect((err) => {
-//   if (err) {
-//     console.error("Database Connection Failed!", err);
-//   } else {
-//     console.log("Connected to MySQL Database");
-//   }
-// });
-
-// const SECRET_KEY = "your_secret_key"; // Change this to a secure key
-
-// // Middleware to check if the user is an admin
-// const isAdmin = (req, res, next) => {
-//   const token = req.headers.authorization?.split(" ")[1];
-//   if (!token) return res.status(401).json({ error: "Access denied. No token provided." });
-
-//   try {
-//     const decoded = jwt.verify(token, SECRET_KEY);
-//     if (!decoded.isAdmin) return res.status(403).json({ error: "Access denied. Not an admin." });
-//     req.user = decoded;
-//     next();
-//   } catch (err) {
-//     res.status(400).json({ error: "Invalid token." });
-//   }
-// };
-
-// // **Get All Users** (Admin-only)
-// app.get("/api/users", isAdmin, (req, res) => {
-//   const sql = "SELECT id, name, email, is_admin FROM users";
-//   db.query(sql, (err, results) => {
-//     if (err) return res.status(500).json({ error: err.message });
-//     res.json(results);
-//   });
-// });
-
-// // **Promote a User to Admin** (Admin-only)
-// app.put("/api/users/:id/make-admin", isAdmin, (req, res) => {
-//   const userId = req.params.id;
-
-//   const sql = "UPDATE users SET is_admin = TRUE WHERE id = ?";
-//   db.query(sql, [userId], (err, result) => {
-//     if (err) return res.status(500).json({ error: err.message });
-//     if (result.affectedRows === 0) return res.status(404).json({ error: "User not found" });
-    
-//     res.json({ message: "User promoted to admin successfully" });
-//   });
-// });
-
-// // Start Server
-// app.listen(5000, () => {
-//   console.log("Server running on port 5000");
-// });
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
