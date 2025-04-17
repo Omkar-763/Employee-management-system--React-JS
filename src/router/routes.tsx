@@ -1,4 +1,9 @@
+import path from 'path';
 import { lazy } from 'react';
+import ProfileDropdown from '../components/dropdown/ProfileDropdown';
+
+
+
 const Index = lazy(() => import('../pages/Index'));
 const Analytics = lazy(() => import('../pages/Analytics'));
 const Finance = lazy(() => import('../pages/Finance'));
@@ -99,12 +104,34 @@ const QuillEditor = lazy(() => import('../pages/Forms/QuillEditor'));
 const MarkDownEditor = lazy(() => import('../pages/Forms/MarkDownEditor'));
 const DateRangePicker = lazy(() => import('../pages/Forms/DateRangePicker'));
 const Clipboard = lazy(() => import('../pages/Forms/Clipboard'));
-
+const Reports = lazy(() => import('../pages/Admin/Reports'));
+const ManageUsers = lazy(() => import('../pages/Admin/ManageUsers'));
+const Feed = lazy(() => import('../pages/Apps/Feed'));
+const Onlinedocuments = lazy(() => import('../pages/Apps/Onlinedocuments'));
+const Drive = lazy(() => import('../pages/Apps/Drive'));
+const Webmail = lazy(() => import('../pages/Apps/Webmail'));
+const Workgroups = lazy(() => import('../pages/Apps/Workgroups'));
+const Taskandprojects = lazy(() => import('../pages/Apps/Taskandprojects'));
+const Automation = lazy(() => import('../pages/Apps/Automation'));
+const Timetracker  = lazy(() => import ('../pages/Apps/Timetracker'));
 const routes = [
+    //ProfileDropdown
+
+    {
+        path: '/dropdown/profile-dropdown',
+        element: <ProfileDropdown />,
+    },
+
     // dashboard
+
+    // {
+    //     path: '/',
+    //     element: <Index />,
+    // },
     {
         path: '/',
-        element: <Index />,
+        element: <LoginBoxed />,
+        layout: 'blank',
     },
     // {
     //     path: '/index',
@@ -146,8 +173,20 @@ const routes = [
         element: <List />,
     },
     // Apps page
+
     {
-        path: '/apps/chat',
+        path: '/apps/timetracker',
+        element: <Timetracker/>,
+    },
+
+    
+    {
+        path: '/apps/feed',
+        element: <Feed />,
+    },
+
+    {
+        path: '/apps/chats',
         element: <Chat />,
     },
     {
@@ -157,6 +196,46 @@ const routes = [
     {
         path: '/apps/calendar',
         element: <Calendar />,
+    },
+
+    {
+        path: '/apps/onlinedocument',
+        element: <Onlinedocuments />,
+    },
+
+    {
+        path: '/apps/drive',
+        element: <Drive />,
+    },
+
+    {
+        path: '/apps/webmail',
+        element: <Webmail />,
+    },
+
+    {
+        path: '/apps/workgroups',
+        element: <Workgroups />,
+    },
+
+    {
+        path: '/apps/taskandprojects',
+        element: <Taskandprojects />,
+    },
+
+    {
+        path: '/apps/automation',
+        element: <Automation />,
+    },
+
+    //admin page
+    {
+        path: '/admin/reports',
+        element: <Reports />,
+    },
+    {
+        path: '/admin/users',
+        element: <ManageUsers />,
     },
     // preview page
     {
@@ -172,6 +251,8 @@ const routes = [
         element: <Edit />,
     },
     // components page
+
+
     {
         path: '/components/tabs',
         element: <Tabs />,
