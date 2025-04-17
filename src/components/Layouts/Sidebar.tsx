@@ -141,7 +141,7 @@ const Sidebar = () => {
                             </li>
 
                             <li className="nav-item">
-                                <NavLink to="/apps/chat" className="group">
+                                <NavLink to="/apps/chats" className="group">
                                     <div className="flex items-center">
                                         <IconMenuChat className="shrink-0" />
                                         <span className="pl-3 text-black dark:text-white">{t('Chat')}</span>

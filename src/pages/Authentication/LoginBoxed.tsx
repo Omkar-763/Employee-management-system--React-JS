@@ -224,7 +224,7 @@ const LoginBoxed = () => {
                 if (response.data.isAdmin) {
                     navigate('/'); // Redirect admin
                 } else {
-                    navigate('/apps/chat'); // Redirect user
+                    navigate('/apps/chats'); // Redirect user
                 }
             }
         } catch (err: any) {

@@ -186,7 +186,7 @@ const routes = [
     },
 
     {
-        path: '/apps/chat',
+        path: '/apps/chats',
         element: <Chat />,
     },
     {
