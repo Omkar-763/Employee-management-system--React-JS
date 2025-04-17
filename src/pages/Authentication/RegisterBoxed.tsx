@@ -291,6 +291,7 @@ import IconFacebookCircle from '../../components/Icon/IconFacebookCircle';
 import IconTwitter from '../../components/Icon/IconTwitter';
 import IconGoogle from '../../components/Icon/IconGoogle';
 import axios from 'axios';
+import axios from 'axios';
 
 const RegisterBoxed = () => {
     const dispatch = useDispatch();
@@ -299,9 +300,11 @@ const RegisterBoxed = () => {
     });
     const navigate = useNavigate();
 
+
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
+
 
     const setLocale = (flag: string) => {
         setFlag(flag);
@@ -313,6 +316,49 @@ const RegisterBoxed = () => {
     };
     const [flag, setFlag] = useState(themeConfig.locale);
 
+    // Form state
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        newsletter: false
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    // Handle form input changes
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [id === 'Email' ? 'email' : id === 'Password' ? 'password' : id === 'Name' ? 'name' : id]: 
+                type === 'checkbox' ? checked : value
+        });
+    };
+
+    const submitForm = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+
+        try {
+            // Call the register API endpoint
+            const response = await axios.post('http://localhost:5000/register', {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password
+            });
+
+            setLoading(false);
+            
+            // If registration is successful, redirect to login page
+            if (response.data.message) {
+                navigate('/auth/boxed-signin');
+            }
+        } catch (err: any) {
+            setLoading(false);
+            setError(err.response?.data?.error || 'Registration failed. Please try again.');
+        }
     // Form state
     const [formData, setFormData] = useState({
         name: '',
@@ -421,10 +467,24 @@ const RegisterBoxed = () => {
                                     {error}
                                 </div>
                             )}
+                            {error && (
+                                <div className="mb-5 rounded-md bg-red-100 p-3 text-sm font-medium text-red-600 dark:bg-red-600/20 dark:text-red-400">
+                                    {error}
+                                </div>
+                            )}
                             <form className="space-y-5 dark:text-white" onSubmit={submitForm}>
                                 <div>
                                     <label htmlFor="Name">Name</label>
                                     <div className="relative text-white-dark">
+                                        <input 
+                                            id="Name" 
+                                            type="text" 
+                                            placeholder="Enter Name" 
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                            value={formData.name}
+                                            onChange={handleChange}
+                                            required
+                                        />
                                         <input 
                                             id="Name" 
                                             type="text" 
@@ -451,6 +511,15 @@ const RegisterBoxed = () => {
                                             onChange={handleChange}
                                             required
                                         />
+                                        <input 
+                                            id="Email" 
+                                            type="email" 
+                                            placeholder="Enter Email" 
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            required
+                                        />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconMail fill={true} />
                                         </span>
@@ -459,6 +528,15 @@ const RegisterBoxed = () => {
                                 <div>
                                     <label htmlFor="Password">Password</label>
                                     <div className="relative text-white-dark">
+                                        <input 
+                                            id="Password" 
+                                            type="password" 
+                                            placeholder="Enter Password" 
+                                            className="form-input ps-10 placeholder:text-white-dark"
+                                            value={formData.password}
+                                            onChange={handleChange}
+                                            required
+                                        />
                                         <input 
                                             id="Password" 
                                             type="password" 
@@ -481,9 +559,21 @@ const RegisterBoxed = () => {
                                             checked={formData.newsletter}
                                             onChange={handleChange}
                                         />
+                                        <input 
+                                            type="checkbox" 
+                                            className="form-checkbox bg-white dark:bg-black"
+                                            checked={formData.newsletter}
+                                            onChange={handleChange}
+                                        />
                                         <span className="text-white-dark">Subscribe to weekly newsletter</span>
                                     </label>
                                 </div>
+                                <button 
+                                    type="submit" 
+                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
+                                    disabled={loading}
+                                >
+                                    {loading ? 'Creating Account...' : 'Sign Up'}
                                 <button 
                                     type="submit" 
                                     className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
