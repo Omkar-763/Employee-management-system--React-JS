@@ -286,25 +286,19 @@ import IconCaretDown from '../../components/Icon/IconCaretDown';
 import IconUser from '../../components/Icon/IconUser';
 import IconMail from '../../components/Icon/IconMail';
 import IconLockDots from '../../components/Icon/IconLockDots';
-import IconInstagram from '../../components/Icon/IconInstagram';
-import IconFacebookCircle from '../../components/Icon/IconFacebookCircle';
-import IconTwitter from '../../components/Icon/IconTwitter';
-import IconGoogle from '../../components/Icon/IconGoogle';
-import axios from 'axios';
 import axios from 'axios';
 
 const RegisterBoxed = () => {
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('Register Boxed'));
-    });
-    const navigate = useNavigate();
+    }, [dispatch]);
 
+    const navigate = useNavigate();
 
     const isDark = useSelector((state: IRootState) => state.themeConfig.theme === 'dark' || state.themeConfig.isDarkMode);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
     const themeConfig = useSelector((state: IRootState) => state.themeConfig);
-
 
     const setLocale = (flag: string) => {
         setFlag(flag);
@@ -350,50 +344,7 @@ const RegisterBoxed = () => {
             });
 
             setLoading(false);
-            
-            // If registration is successful, redirect to login page
-            if (response.data.message) {
-                navigate('/auth/boxed-signin');
-            }
-        } catch (err: any) {
-            setLoading(false);
-            setError(err.response?.data?.error || 'Registration failed. Please try again.');
-        }
-    // Form state
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        password: '',
-        newsletter: false
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
 
-    // Handle form input changes
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { id, value, type, checked } = e.target;
-        setFormData({
-            ...formData,
-            [id === 'Email' ? 'email' : id === 'Password' ? 'password' : id === 'Name' ? 'name' : id]: 
-                type === 'checkbox' ? checked : value
-        });
-    };
-
-    const submitForm = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        try {
-            // Call the register API endpoint
-            const response = await axios.post('http://localhost:5000/register', {
-                name: formData.name,
-                email: formData.email,
-                password: formData.password
-            });
-
-            setLoading(false);
-            
             // If registration is successful, redirect to login page
             if (response.data.message) {
                 navigate('/auth/boxed-signin');
@@ -467,24 +418,10 @@ const RegisterBoxed = () => {
                                     {error}
                                 </div>
                             )}
-                            {error && (
-                                <div className="mb-5 rounded-md bg-red-100 p-3 text-sm font-medium text-red-600 dark:bg-red-600/20 dark:text-red-400">
-                                    {error}
-                                </div>
-                            )}
                             <form className="space-y-5 dark:text-white" onSubmit={submitForm}>
                                 <div>
                                     <label htmlFor="Name">Name</label>
                                     <div className="relative text-white-dark">
-                                        <input 
-                                            id="Name" 
-                                            type="text" 
-                                            placeholder="Enter Name" 
-                                            className="form-input ps-10 placeholder:text-white-dark"
-                                            value={formData.name}
-                                            onChange={handleChange}
-                                            required
-                                        />
                                         <input 
                                             id="Name" 
                                             type="text" 
@@ -511,15 +448,6 @@ const RegisterBoxed = () => {
                                             onChange={handleChange}
                                             required
                                         />
-                                        <input 
-                                            id="Email" 
-                                            type="email" 
-                                            placeholder="Enter Email" 
-                                            className="form-input ps-10 placeholder:text-white-dark"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            required
-                                        />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconMail fill={true} />
                                         </span>
@@ -537,101 +465,36 @@ const RegisterBoxed = () => {
                                             onChange={handleChange}
                                             required
                                         />
-                                        <input 
-                                            id="Password" 
-                                            type="password" 
-                                            placeholder="Enter Password" 
-                                            className="form-input ps-10 placeholder:text-white-dark"
-                                            value={formData.password}
-                                            onChange={handleChange}
-                                            required
-                                        />
                                         <span className="absolute start-4 top-1/2 -translate-y-1/2">
                                             <IconLockDots fill={true} />
                                         </span>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="flex cursor-pointer items-center">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
                                         <input 
+                                            id="newsletter" 
                                             type="checkbox" 
-                                            className="form-checkbox bg-white dark:bg-black"
-                                            checked={formData.newsletter}
+                                            checked={formData.newsletter} 
                                             onChange={handleChange}
+                                            className="form-checkbox"
                                         />
-                                        <input 
-                                            type="checkbox" 
-                                            className="form-checkbox bg-white dark:bg-black"
-                                            checked={formData.newsletter}
-                                            onChange={handleChange}
-                                        />
-                                        <span className="text-white-dark">Subscribe to weekly newsletter</span>
-                                    </label>
+                                        <label htmlFor="newsletter" className="ms-2">Subscribe to newsletter</label>
+                                    </div>
+                                    <Link to="/auth/boxed-signin" className="text-sm text-primary hover:underline">
+                                        Already have an account? Sign In
+                                    </Link>
                                 </div>
-                                <button 
-                                    type="submit" 
-                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Creating Account...' : 'Sign Up'}
-                                <button 
-                                    type="submit" 
-                                    className="btn btn-gradient !mt-6 w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)]"
-                                    disabled={loading}
-                                >
-                                    {loading ? 'Creating Account...' : 'Sign Up'}
-                                </button>
+                                <div className="space-x-3">
+                                    <button 
+                                        type="submit" 
+                                        className="btn w-full btn-primary"
+                                        disabled={loading}
+                                    >
+                                        {loading ? 'Signing up...' : 'Sign Up'}
+                                    </button>
+                                </div>
                             </form>
-                            <div className="relative my-7 text-center md:mb-9">
-                                <span className="absolute inset-x-0 top-1/2 h-px w-full -translate-y-1/2 bg-white-light dark:bg-white-dark"></span>
-                                <span className="relative bg-white px-2 font-bold uppercase text-white-dark dark:bg-dark dark:text-white-light">or</span>
-                            </div>
-                            <div className="mb-10 md:mb-[60px]">
-                                <ul className="flex justify-center gap-3.5 text-white">
-                                    <li>
-                                        <Link
-                                            to="#"
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                            style={{ background: 'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)' }}
-                                        >
-                                            <IconInstagram />
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            to="#"
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                            style={{ background: 'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)' }}
-                                        >
-                                            <IconFacebookCircle />
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            to="#"
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                            style={{ background: 'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)' }}
-                                        >
-                                            <IconTwitter fill={true} />
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link
-                                            to="#"
-                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full p-0 transition hover:scale-110"
-                                            style={{ background: 'linear-gradient(135deg, rgba(239, 18, 98, 1) 0%, rgba(67, 97, 238, 1) 100%)' }}
-                                        >
-                                            <IconGoogle />
-                                        </Link>
-                                    </li>
-                                </ul>
-                            </div>
-                            <div className="text-center dark:text-white">
-                                Already have an account ?&nbsp;
-                                <Link to="/auth/boxed-signin" className="uppercase text-primary underline transition hover:text-black dark:hover:text-white">
-                                    SIGN IN
-                                </Link>
-                            </div>
                         </div>
                     </div>
                 </div>
