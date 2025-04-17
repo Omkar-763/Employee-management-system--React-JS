@@ -26,6 +26,8 @@ function App({ children }: PropsWithChildren) {
             } main-section antialiased relative font-nunito text-sm font-normal`}
         >
             {children}
+
+            
         </div>
     );
 }
