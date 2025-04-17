@@ -11,7 +11,6 @@ const SECRET_KEY = process.env.JWT_SECRET || 'your_jwt_secret_key';
 // Initialize Express app
 const app = express();
 app.use(cors());
-app.use(cors());
 app.use(express.json());
 
 // Database connection
