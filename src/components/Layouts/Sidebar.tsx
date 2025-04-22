@@ -731,21 +731,20 @@ import IconBook from '../Icon/IconBook';
 import IconBookmark from '../Icon/IconBookmark';
 import IconFile from '../Icon/IconFile';
 import IconFolder from '../Icon/IconFolder';
-import IconHeart from '../Icon/IconHeart';
 import IconHome from '../Icon/IconHome';
 import IconChecks from '../Icon/IconChecks';
 import axios from 'axios';
 
 const Sidebar = () => {
-    const [currentMenu, setCurrentMenu] = useState<string>('');
     const [isAdmin, setIsAdmin] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
+    const [userEmail, setUserEmail] = useState<string>('');
     const dispatch = useDispatch();
     const location = useLocation();
     const { t } = useTranslation();
-    
+
     useEffect(() => {
-        const checkAdminStatus = async () => {
+        const checkAuthStatus = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
@@ -753,47 +752,21 @@ const Sidebar = () => {
                     return;
                 }
 
-                // First check localStorage
-                const localStorageAdmin = localStorage.getItem('isAdmin');
-                if (localStorageAdmin) {
-                    setIsAdmin(localStorageAdmin === 'true');
-                    setLoading(false);
-                    return;
-                }
-
-                // Fallback to API check
                 const response = await axios.get('http://localhost:5000/user-info', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
-                // Check for both boolean true and numeric 1
-                const adminStatus = response.data.is_admin === true || response.data.is_admin === 1;
-                setIsAdmin(adminStatus);
-                localStorage.setItem('isAdmin', adminStatus.toString());
-                
+                setIsAdmin(response.data.is_admin === 1 || response.data.is_admin === true);
+                setUserEmail(response.data.email);
             } catch (error) {
-                console.error('Admin check error:', error);
-                setIsAdmin(false);
+                console.error('Auth check error:', error);
             } finally {
                 setLoading(false);
             }
         };
 
-        checkAdminStatus();
-        
-        // Listen for storage changes (from other tabs)
-        const handleStorageChange = () => {
-            const adminStatus = localStorage.getItem('isAdmin');
-            setIsAdmin(adminStatus === 'true');
-        };
-        
-        window.addEventListener('storage', handleStorageChange);
-        return () => window.removeEventListener('storage', handleStorageChange);
+        checkAuthStatus();
     }, []);
-
-    const toggleMenu = (value: string) => {
-        setCurrentMenu((oldValue) => (oldValue === value ? '' : value));
-    };
 
     useEffect(() => {
         if (window.innerWidth < 1024) {
@@ -811,7 +784,27 @@ const Sidebar = () => {
         );
     }
 
+    // Common apps for all users
+    const commonApps = [
+        { path: '/apps/feed', icon: <IconMenuDashboard className="w-5 h-5" />, label: 'Feed' },
+        { path: '/apps/chats', icon: <IconMenuChat className="w-5 h-5" />, label: 'Chat' },
+        { path: '/apps/mailbox', icon: <IconMenuMailbox className="w-5 h-5" />, label: 'Email' },
+        { path: '/apps/drive', icon: <IconFolder className="w-5 h-5" />, label: 'Drive' },
+        { path: '/apps/todolist', icon: <IconChecks className="w-5 h-5" />, label: 'Todo List' },
+        { path: '/apps/taskandprojects', icon: <IconBookmark className="w-5 h-5" />, label: 'Task And Projects' },
+        { path: '/apps/scrumboard', icon: <IconMenuScrumboard className="w-5 h-5" />, label: 'Scrumboard' },
+        { path: '/apps/onlinedocument', icon: <IconFile className="w-5 h-5" />, label: 'Online Documents' },
+        { path: '/apps/calendar', icon: <IconMenuCalendar className="w-5 h-5" />, label: 'Calendar' }
+    ];
+
+    // Admin specific items
+    const adminItems = [
+        { path: '/admin/users', icon: <IconBook className="w-5 h-5" />, label: 'Manage Users' },
+        { path: '/admin/reports', icon: <IconFile className="w-5 h-5" />, label: 'Reports' }
+    ];
+
     return (
+<<<<<<< HEAD
         <div>
           <nav
             className="sidebar fixed min-h-screen w-[260px] shadow-lg z-50 transition-all duration-300 
@@ -957,6 +950,92 @@ const Sidebar = () => {
               </PerfectScrollbar>
             </div>
           </nav>
+=======
+        <div className="sidebar fixed min-h-screen w-[260px] shadow-lg z-50 bg-white dark:bg-gray-800">
+            <div className="h-full flex flex-col">
+                {/* Header */}
+                <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <NavLink to="/" className="main-logo flex items-center">
+                        <img className="w-8" src="/assets/images/logo.svg" alt="logo" />
+                        <span className="text-xl font-semibold text-black dark:text-white ml-2">EMS</span>
+                    </NavLink>
+                    <button
+                        type="button"
+                        className="collapse-icon w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => dispatch(toggleSidebar())}
+                    >
+                        <IconCaretsDown className="w-4 h-4 rotate-90" />
+                    </button>
+                </div>
+
+                {/* User email */}
+                {userEmail && (
+                    <div className="px-6 py-3 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
+                        {userEmail}
+                    </div>
+                )}
+
+                {/* Navigation */}
+                <PerfectScrollbar className="flex-1">
+                    <div className="p-4">
+                        {/* Dashboard */}
+                        <NavLink 
+                            to="/" 
+                            className={({ isActive }) => 
+                                `flex items-center px-3 py-2.5 rounded-lg mb-1 ${isActive ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
+                            }
+                        >
+                            <IconHome className="w-5 h-5" />
+                            <span className="ml-3 font-medium">Dashboard</span>
+                        </NavLink>
+
+                        {/* Apps Section */}
+                        <div className="mt-6">
+                            <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                Apps
+                            </h3>
+                            <div className="space-y-1">
+                                {commonApps.map((app, index) => (
+                                    <NavLink
+                                        key={index}
+                                        to={app.path}
+                                        className={({ isActive }) => 
+                                            `flex items-center px-3 py-2.5 rounded-lg ${isActive ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
+                                        }
+                                    >
+                                        {app.icon}
+                                        <span className="ml-3 font-medium">{app.label}</span>
+                                    </NavLink>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Admin Section */}
+                        {isAdmin && (
+                            <div className="mt-6">
+                                <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                                    Admin
+                                </h3>
+                                <div className="space-y-1">
+                                    {adminItems.map((item, index) => (
+                                        <NavLink
+                                            key={`admin-${index}`}
+                                            to={item.path}
+                                            className={({ isActive }) => 
+                                                `flex items-center px-3 py-2.5 rounded-lg ${isActive ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
+                                            }
+                                        >
+                                            {item.icon}
+                                            <span className="ml-3 font-medium">{item.label}</span>
+                                        </NavLink>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </PerfectScrollbar>
+            </div>
+>>>>>>> 221dbb84a51f2197545d377b78311bfde18831ba
         </div>
       );
       
