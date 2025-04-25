@@ -591,6 +591,8 @@ app.post('/api/recycle-bin/restore/:id', authenticateToken, (req, res) => {
                             if (err) return res.status(500).json({ error: 'Database error' });
                             res.json({ message: 'Item restored successfully' });
                         }
+                    
+                    
                     );
                 }
             );
