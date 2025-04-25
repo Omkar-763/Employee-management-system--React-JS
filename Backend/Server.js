@@ -1,35 +1,29 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql');
 const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
-// Configuration constants
-const SECRET_KEY = process.env.JWT_SECRET || 'your_jwt_secret_key';
+// Import routes
+const authRoutes = require('./routes/auth-routes');
+const eventsRoutes = require('./routes/events-routes');
+const timeTrackingRoutes = require('./routes/timeTracking-routes');
+const filesRoutes = require('./routes/files-routes');
 
 // Initialize Express app
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Database connection
-const db = mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'employee_management'
-});
+// Import database connection (this will establish the connection)
+require('./config/db');
 
-// Connect to database
-db.connect(err => {
-    if (err) {
-        console.error('Database connection failed:', err);
-        process.exit(1);
-    }
-    console.log('Connected to MySQL database');
-});
+// Routes
+app.use('/', authRoutes);                 // Auth routes at root level
+app.use('/api/events', eventsRoutes);     // Events routes
+app.use('/api/timers', timeTrackingRoutes); // Time tracking routes
+app.use('/api', filesRoutes);            // File management routes
 
+<<<<<<< HEAD:Backend/Server.js
 // User authentication endpoints
 app.post('/register', async (req, res) => {
     const { name, email, password } = req.body;
@@ -599,6 +593,8 @@ app.post('/api/recycle-bin/restore/:id', authenticateToken, (req, res) => {
         }
     );
 });
+=======
+>>>>>>> 84bc1b7763ae2747ce5de89ade5f90f434c875ac:backend/server.js
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
