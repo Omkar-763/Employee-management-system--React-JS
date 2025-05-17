@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth-routes');
 const eventsRoutes = require('./routes/events-routes');
 const timeTrackingRoutes = require('./routes/timeTracking-routes');
 const filesRoutes = require('./routes/files-routes');
+const userRoutes = require('./routes/user-routes'); // New user management routes
 
 // Initialize Express app
 const app = express();
@@ -22,6 +23,7 @@ app.use('/', authRoutes);                 // Auth routes at root level
 app.use('/api/events', eventsRoutes);     // Events routes
 app.use('/api/timers', timeTrackingRoutes); // Time tracking routes
 app.use('/api', filesRoutes);            // File management routes
+app.use('/api/users', userRoutes);       // New user management routes
 
 // Error handling middleware
 app.use((err, req, res, next) => {
