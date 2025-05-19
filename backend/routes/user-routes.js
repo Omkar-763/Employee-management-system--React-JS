@@ -1,147 +1,129 @@
-// Enhanced user-routes.js with comprehensive debugging
+// routes/user-routes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { authenticateToken } = require('../middleware/auth-middleware');
 
-// DEBUG ENDPOINT: Test database connection
-router.get('employee_management', async (req, res) => {
-  try {
-    const [result] = await db.promise().query('SELECT 1 as db_connection_test');
-    return res.json({
-      success: true,
-      message: 'Database connection successful',
-      data: result
-    });
-  } catch (error) {
-    console.error('Database connection test failed:', error);
-    return res.status(500).json({
-      success: false,
-      error: 'Database connection failed',
-      details: error.message
-    });
-  }
-});
-
-// DEBUG ENDPOINT: Test authentication
-router.get('/test-auth', authenticateToken, (req, res) => {
-  return res.json({
-    success: true,
-    message: 'Authentication successful',
-    user: {
-      id: req.user.id,
-      // Don't include sensitive info
-      tokenPayload: JSON.stringify(req.user)
+// Get all users (admin only)
+router.get('/', authenticateToken, (req, res) => {
+    if (!req.user.is_admin) {
+        return res.status(403).json({ error: 'Unauthorized' });
     }
-  });
+
+    db.query(
+        'SELECT id, name, email, is_admin, created_at FROM users ORDER BY created_at DESC',
+        (err, results) => {
+            if (err) {
+                console.error('Error fetching users:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            res.json(results);
+        }
+    );
 });
 
-// Get all users (admin only) - WITH ENHANCED DEBUGGING
-router.get('/', async (req, res) => {
-  console.log('=== GET /users ===');
-  console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  
-  // Check if we have an auth header before hitting the middleware
-  const authHeader = req.headers['authorization'];
-  if (!authHeader) {
-    console.log('Auth header missing in request');
-  } else {
-    console.log('Auth header present:', authHeader.substring(0, 15) + '...');
-  }
-
-  // Continue with normal flow
-  authenticateToken(req, res, async () => {
-    console.log('Auth middleware passed, user:', req.user);
-    
-    try {
-      // Check if req.user exists
-      if (!req.user || !req.user.id) {
-        console.log('Authentication succeeded but user data missing');
-        return res.status(401).json({
-          success: false,
-          error: 'Authentication failed: Missing user data'
-        });
-      }
-      
-      console.log('Checking admin status for user ID:', req.user.id);
-      
-      // Verify requesting user exists and is admin
-      try {
-        const [users] = await db.promise().query(
-          'SELECT id, is_admin FROM users WHERE id = ? AND deleted_at IS NULL', 
-          [req.user.id]
-        );
-        
-        console.log('Admin check query result:', users);
-        
-        if (!users || users.length === 0) {
-          console.log('User not found in database');
-          return res.status(404).json({
-            success: false,
-            error: 'User not found'
-          });
-        }
-
-        if (!users[0].is_admin) {
-          console.log('User is not an admin');
-          return res.status(403).json({
-            success: false,
-            error: 'Admin privileges required'
-          });
-        }
-
-        console.log('User is admin, proceeding to fetch all users');
-        
-        // Get all active users
-        try {
-          console.log('Executing query to get all users');
-          const [allUsers] = await db.promise().query(`
-            SELECT 
-              id, 
-              name, 
-              email, 
-              is_admin, 
-              DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') as created_at
-            FROM users 
-            WHERE deleted_at IS NULL
-            ORDER BY created_at DESC
-          `);
-          
-          console.log(`Query successful, found ${allUsers.length} users`);
-          return res.json({
-            success: true,
-            data: allUsers
-          });
-        } catch (queryError) {
-          console.error('Error fetching all users:', queryError);
-          return res.status(500).json({
-            success: false,
-            error: 'Database error when fetching users',
-            details: process.env.NODE_ENV === 'development' ? queryError.message : undefined
-          });
-        }
-      } catch (adminCheckError) {
-        console.error('Error checking admin status:', adminCheckError);
-        return res.status(500).json({
-          success: false,
-          error: 'Database error when checking admin status',
-          details: process.env.NODE_ENV === 'development' ? adminCheckError.message : undefined
-        });
-      }
-    } catch (error) {
-      console.error('Unexpected error in users route:', error);
-      return res.status(500).json({
-        success: false,
-        error: 'Failed to fetch users',
-        details: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
+// Update user information (admin only)
+router.put('/:id', authenticateToken, (req, res) => {
+    if (!req.user.is_admin) {
+        return res.status(403).json({ error: 'Unauthorized' });
     }
-  });
+
+    const { id } = req.params;
+    const { name, email, is_admin } = req.body;
+
+    // Prevent updating the primary admin's admin status
+    if (id == 1 && is_admin === false) {
+        return res.status(400).json({ error: 'Cannot demote primary admin' });
+    }
+
+    // Prevent users from updating themselves
+    if (id == req.user.id) {
+        return res.status(400).json({ error: 'Cannot update your own account' });
+    }
+
+    db.query(
+        'UPDATE users SET name = ?, email = ?, is_admin = ? WHERE id = ?',
+        [name, email, is_admin, id],
+        (err, result) => {
+            if (err) {
+                console.error('Error updating user:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json({ message: 'User updated successfully' });
+        }
+    );
 });
 
-// Update admin status
-// router.put('/:id/admin', authenticateToken, async (req, res) => {
-//   // [existing code for updating admin status]
-// });
+// Delete user (admin only)
+router.delete('/:id', authenticateToken, (req, res) => {
+    if (!req.user.is_admin) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const { id } = req.params;
+
+    // Prevent deleting the primary admin (user with ID 1)
+    if (id == 1) {
+        return res.status(400).json({ error: 'Cannot delete primary admin' });
+    }
+
+    // Prevent users from deleting themselves
+    if (id == req.user.id) {
+        return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+
+    db.query(
+        'DELETE FROM users WHERE id = ?',
+        [id],
+        (err, result) => {
+            if (err) {
+                console.error('Error deleting user:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json({ message: 'User deleted successfully' });
+        }
+    );
+});
+
+// Update admin status (admin only)
+router.patch('/:id/admin-status', authenticateToken, (req, res) => {
+    if (!req.user.is_admin) {
+        return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const { id } = req.params;
+    const { is_admin } = req.body;
+
+    // Prevent changing the primary admin's status
+    if (id == 1) {
+        return res.status(400).json({ error: 'Cannot change primary admin status' });
+    }
+
+    // Prevent users from changing their own status
+    if (id == req.user.id) {
+        return res.status(400).json({ error: 'Cannot change your own admin status' });
+    }
+
+    db.query(
+        'UPDATE users SET is_admin = ? WHERE id = ?',
+        [is_admin, id],
+        (err, result) => {
+            if (err) {
+                console.error('Error updating admin status:', err);
+                return res.status(500).json({ error: 'Database error' });
+            }
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.json({ message: 'Admin status updated successfully' });
+        }
+    );
+});
 
 module.exports = router;

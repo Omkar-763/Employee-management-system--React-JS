@@ -23,7 +23,10 @@ router.post('/register', async (req, res) => {
 
             const hashedPassword = await bcrypt.hash(password, 10);
             
+            // Check if this is the first user (no users in database)
             db.query('SELECT COUNT(*) as count FROM users', (err, countResults) => {
+                if (err) throw err;
+                
                 const is_admin = countResults[0].count === 0;
                 
                 db.query(
