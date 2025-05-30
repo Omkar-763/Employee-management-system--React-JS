@@ -2,8 +2,6 @@ import path from 'path';
 import { lazy } from 'react';
 import ProfileDropdown from '../components/dropdown/ProfileDropdown';
 
-
-
 const Index = lazy(() => import('../pages/Index'));
 const Analytics = lazy(() => import('../pages/Analytics'));
 const Finance = lazy(() => import('../pages/Finance'));
@@ -113,7 +111,9 @@ const Webmail = lazy(() => import('../pages/Apps/Webmail'));
 const Workgroups = lazy(() => import('../pages/Apps/Workgroups'));
 const Taskandprojects = lazy(() => import('../pages/Apps/Taskandprojects'));
 const Automation = lazy(() => import('../pages/Apps/Automation'));
-const Timetracker  = lazy(() => import ('../pages/Apps/Timetracker'));
+const Timetracker = lazy(() => import('../pages/Apps/Timetracker'));
+const Attendance = lazy(() => import('../pages/Apps/Attendance'));
+
 const routes = [
     //ProfileDropdown
 
@@ -128,6 +128,13 @@ const routes = [
     //     path: '/',
     //     element: <Index />,
     // },
+    //aprovals
+
+    {
+        path: '/apps/attendance',
+        element: <Attendance />,
+    },
+
     {
         path: '/',
         element: <LoginBoxed />,
@@ -176,10 +183,9 @@ const routes = [
 
     {
         path: '/apps/timetracker',
-        element: <Timetracker/>,
+        element: <Timetracker />,
     },
 
-    
     {
         path: '/apps/feed',
         element: <Feed />,
@@ -251,7 +257,6 @@ const routes = [
         element: <Edit />,
     },
     // components page
-
 
     {
         path: '/components/tabs',

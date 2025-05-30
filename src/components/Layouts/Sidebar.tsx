@@ -16,6 +16,8 @@ import IconFile from '../Icon/IconFile';
 import IconFolder from '../Icon/IconFolder';
 import IconHome from '../Icon/IconHome';
 import IconChecks from '../Icon/IconChecks';
+import IconAirplay from '../Icon/IconAirplay';
+
 import axios from 'axios';
 
 const Sidebar = () => {
@@ -78,12 +80,15 @@ const Sidebar = () => {
         { path: '/apps/scrumboard', icon: <IconMenuScrumboard className="w-5 h-5" />, label: 'Scrumboard' },
         { path: '/apps/onlinedocument', icon: <IconFile className="w-5 h-5" />, label: 'Online Documents' },
         { path: '/apps/calendar', icon: <IconMenuCalendar className="w-5 h-5" />, label: 'Calendar' },
+        // { path: '/apps/approvals', icon: <IconFile className="w-5 h-5" />, label: 'Approvals' },
+        { path: '/apps/attendance', icon: <IconAirplay className="w-5 h-5" />, label: 'Attendance' },
     ];
 
     // Admin specific items
     const adminItems = [
         { path: '/admin/users', icon: <IconBook className="w-5 h-5" />, label: 'Manage Users' },
         { path: '/admin/reports', icon: <IconFile className="w-5 h-5" />, label: 'Reports' },
+        // { path: '/admin/AdminApprovals', icon: <IconAirplay className="w-5 h-5" />, label: 'Admin Approvals' },
     ];
 
     return (
