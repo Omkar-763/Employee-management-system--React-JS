@@ -113,7 +113,8 @@ const Taskandprojects = lazy(() => import('../pages/Apps/Taskandprojects'));
 const Automation = lazy(() => import('../pages/Apps/Automation'));
 const Timetracker = lazy(() => import('../pages/Apps/Timetracker'));
 const Attendance = lazy(() => import('../pages/Apps/Attendance'));
-
+// const Approvals = lazy(() => import('../pages/Apps/Approvals'));
+// const AdminApprovals = lazy(() => import('../pages/Admin/AdminApprovals'));
 const routes = [
     //ProfileDropdown
 
@@ -129,7 +130,14 @@ const routes = [
     //     element: <Index />,
     // },
     //aprovals
-
+    // {
+    //     path: '/apps/approvals',
+    //     element: <Approvals />,
+    // },
+    // {
+    //     path: '/admin/AdminApprovals',
+    //     element: <AdminApprovals />,
+    // },
     {
         path: '/apps/attendance',
         element: <Attendance />,

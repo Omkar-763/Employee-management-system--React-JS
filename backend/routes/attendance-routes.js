@@ -58,5 +58,52 @@ router.get('/my', authenticateToken, (req, res) => {
         }
     );
 });
+// Add this to your attendance-routes.js
+router.get('/all', authenticateToken, (req, res) => {
+    if (!req.user.is_admin) {
+        return res.status(403).json({ 
+            success: false,
+            error: 'Unauthorized' 
+        });
+    }
+
+    db.query(
+        `SELECT 
+            ts.id,
+            ts.user_id,
+            u.name as user_name,
+            u.email as user_email,
+            ts.start_time,
+            ts.end_time,
+            ts.break_start_time,
+            ts.total_work_duration,
+            ts.total_break_duration,
+            ts.status,
+            ts.created_at
+        FROM time_sessions ts
+        JOIN users u ON ts.user_id = u.id
+        ORDER BY ts.created_at DESC`,
+        (err, results) => {
+            if (err) {
+                console.error('Database error:', err);
+                return res.status(500).json({ 
+                    success: false,
+                    error: 'Failed to fetch attendance records' 
+                });
+            }
+            
+            res.json({
+                success: true,
+                data: results.map(record => ({
+                    ...record,
+                    start_time: safeDateConvert(record.start_time),
+                    end_time: safeDateConvert(record.end_time),
+                    break_start_time: safeDateConvert(record.break_start_time),
+                    created_at: safeDateConvert(record.created_at)
+                }))
+            });
+        }
+    );
+});
 
 module.exports = router;
