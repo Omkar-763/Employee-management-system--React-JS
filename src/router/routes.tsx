@@ -1,15 +1,11 @@
 import path from 'path';
 import { lazy } from 'react';
 import ProfileDropdown from '../components/dropdown/ProfileDropdown';
-
-
-
 const Index = lazy(() => import('../pages/Index'));
 const Analytics = lazy(() => import('../pages/Analytics'));
 const Finance = lazy(() => import('../pages/Finance'));
 const Crypto = lazy(() => import('../pages/Crypto'));
-const Todolist = lazy(() => import('../pages/Apps/Todolist'));
-const Mailbox = lazy(() => import('../pages/Apps/Mailbox'));
+// const Mailbox = lazy(() => import('../pages/Apps/Mailbox'));
 const Notes = lazy(() => import('../pages/Apps/Notes'));
 const Contacts = lazy(() => import('../pages/Apps/Contacts'));
 const Chat = lazy(() => import('../pages/Apps/Chat'));
@@ -107,13 +103,14 @@ const Clipboard = lazy(() => import('../pages/Forms/Clipboard'));
 const Reports = lazy(() => import('../pages/Admin/Reports'));
 const ManageUsers = lazy(() => import('../pages/Admin/ManageUsers'));
 const Feed = lazy(() => import('../pages/Apps/Feed'));
-const Onlinedocuments = lazy(() => import('../pages/Apps/Onlinedocuments'));
+const Approvals = lazy(() => import('../pages/Apps/Approvals'));
 const Drive = lazy(() => import('../pages/Apps/Drive'));
-const Webmail = lazy(() => import('../pages/Apps/Webmail'));
-const Workgroups = lazy(() => import('../pages/Apps/Workgroups'));
-const Taskandprojects = lazy(() => import('../pages/Apps/Taskandprojects'));
-const Automation = lazy(() => import('../pages/Apps/Automation'));
-const Timetracker  = lazy(() => import ('../pages/Apps/Timetracker'));
+const Projects = lazy(() => import('../pages/Apps/Projects'));
+
+const Timetracker = lazy(() => import('../pages/Apps/Timetracker'));
+const AdminApprovals = lazy(() => import('../pages/Admin/AdminApprovals'));
+const Attendance = lazy(() => import('../pages/Apps/Attendance'));
+
 const routes = [
     //ProfileDropdown
 
@@ -152,10 +149,7 @@ const routes = [
         path: '/crypto',
         element: <Crypto />,
     },
-    {
-        path: '/apps/todolist',
-        element: <Todolist />,
-    },
+
     {
         path: '/apps/notes',
         element: <Notes />,
@@ -164,10 +158,10 @@ const routes = [
         path: '/apps/contacts',
         element: <Contacts />,
     },
-    {
-        path: '/apps/mailbox',
-        element: <Mailbox />,
-    },
+    // {
+    //     path: '/apps/mailbox',
+    //     element: <Mailbox />,
+    // },
     {
         path: '/apps/invoice/list',
         element: <List />,
@@ -176,10 +170,9 @@ const routes = [
 
     {
         path: '/apps/timetracker',
-        element: <Timetracker/>,
+        element: <Timetracker />,
     },
 
-    
     {
         path: '/apps/feed',
         element: <Feed />,
@@ -199,8 +192,12 @@ const routes = [
     },
 
     {
-        path: '/apps/onlinedocument',
-        element: <Onlinedocuments />,
+        path: '/apps/approvals',
+        element: <Approvals />,
+    },
+    {
+        path: '/apps/attendance',
+        element: <Attendance />,
     },
 
     {
@@ -209,23 +206,8 @@ const routes = [
     },
 
     {
-        path: '/apps/webmail',
-        element: <Webmail />,
-    },
-
-    {
-        path: '/apps/workgroups',
-        element: <Workgroups />,
-    },
-
-    {
-        path: '/apps/taskandprojects',
-        element: <Taskandprojects />,
-    },
-
-    {
-        path: '/apps/automation',
-        element: <Automation />,
+        path: '/apps/Projects',
+        element: <Projects />,
     },
 
     //admin page
@@ -236,6 +218,10 @@ const routes = [
     {
         path: '/admin/users',
         element: <ManageUsers />,
+    },
+    {
+        path: '/admin/adminapprovals',
+        element: <AdminApprovals />,
     },
     // preview page
     {
@@ -251,7 +237,6 @@ const routes = [
         element: <Edit />,
     },
     // components page
-
 
     {
         path: '/components/tabs',
