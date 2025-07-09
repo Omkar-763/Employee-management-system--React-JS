@@ -10,6 +10,66 @@ import { setPageTitle } from '../../store/themeConfigSlice';
 import IconPlus from '../../components/Icon/IconPlus';
 import IconX from '../../components/Icon/IconX';
 import axios from 'axios';
+import { config } from '@fullcalendar/core/internal';
+
+// for the custome select option 
+
+const MultiSelect = ({ options, selected, onChange, placeholder }: { options: any[], selected: string[], onChange: (selected: string[]) => void, placeholder: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const toggleOption = (option: string) => {
+        if (selected.includes(option)) {
+            onChange(selected.filter(item => item !== option));
+        } else {
+            onChange([...selected, option]);
+        }
+    };
+
+    return (
+        <div className="relative">
+            <div 
+                className="form-input flex items-center justify-between cursor-pointer"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <div className="flex flex-wrap gap-1">
+                    {selected.length > 0 ? (
+                        selected.map(item => (
+                            <span key={item} className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-sm">
+                                {item}
+                            </span>
+                        ))
+                    ) : (
+                        <span className="text-gray-400">{placeholder}</span>
+                    )}
+                </div>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </div>
+            {isOpen && (
+                <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg max-h-60 overflow-auto">
+                    {options.map(option => (
+                        <div
+                            key={option.id}
+                            className={`px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${selected.includes(option.name) ? 'bg-blue-50 dark:bg-blue-900' : ''}`}
+                            onClick={() => toggleOption(option.name)}
+                        >
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    className="form-checkbox rounded"
+                                    checked={selected.includes(option.name)}
+                                    readOnly
+                                />
+                                <span className="ml-2">{option.name}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 const Calendar = () => {
     const dispatch = useDispatch();
@@ -21,34 +81,50 @@ const Calendar = () => {
     const [isAddEventModal, setIsAddEventModal] = useState(false);
     const [minStartDate, setMinStartDate] = useState<any>('');
     const [minEndDate, setMinEndDate] = useState<any>('');
-    const defaultParams = { id: null, title: '', start: '', end: '', description: '', type: 'primary' };
+  const defaultParams = { 
+    id: null, 
+    title: '', 
+    start: '', 
+    end: '', 
+    description: '', 
+    type: 'primary',
+    assignees: [] as string[] // Changed to array for multiple select
+};
     const [params, setParams] = useState<any>(defaultParams);
     const [isLoading, setIsLoading] = useState(true);
+    const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
 
     // Fetch events from backend
     useEffect(() => {
         fetchEvents();
     }, []);
 
-    const fetchEvents = async () => {
-        try {
-            setIsLoading(true);
-            const response = await axios.get('http://localhost:5000/api/events');
-            setEvents(response.data.map((event: any) => ({
-                id: event.id,
-                title: event.title,
-                start: event.start,
-                end: event.end,
-                description: event.description,
-                className: event.type
-            })));
-            setIsLoading(false);
-        } catch (error) {
-            setIsLoading(false);
-            console.error('Error fetching events:', error);
-        }
-    };
-
+   const fetchEvents = async () => {
+    try {
+        setIsLoading(true);
+        const token = localStorage.getItem('token');
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        };
+        const response = await axios.get('http://localhost:5000/api/events', config);
+        setEvents(response.data.map((event: any) => ({
+            id: event.id,
+            title: event.title,
+            start: event.start,
+            end: event.end,
+            description: event.description,
+            className: event.type,
+            sender: event.sender_name,  // Now using sender_name instead of ID
+            assignees: event.assignees ? event.assignees.split(',') : []  // Convert comma-separated string to array
+        })));
+        setIsLoading(false);
+    } catch (error) {
+        setIsLoading(false);
+        console.error('Error fetching events:', error);
+    }
+};
     const dateFormat = (dt: any) => {
         dt = new Date(dt);
         const month = dt.getMonth() + 1 < 10 ? '0' + (dt.getMonth() + 1) : dt.getMonth() + 1;
@@ -58,27 +134,28 @@ const Calendar = () => {
         return dt.getFullYear() + '-' + month + '-' + date + 'T' + hours + ':' + mins;
     };
 
-    const editEvent = (data: any = null) => {
-        let params = JSON.parse(JSON.stringify(defaultParams));
-        setParams(params);
-        if (data) {
-            let obj = JSON.parse(JSON.stringify(data.event));
-            setParams({
-                id: obj.id,
-                title: obj.title,
-                start: dateFormat(obj.start),
-                end: dateFormat(obj.end),
-                type: obj.classNames ? obj.classNames[0] : 'primary',
-                description: obj.extendedProps?.description || '',
-            });
-            setMinStartDate(new Date());
-            setMinEndDate(dateFormat(obj.start));
-        } else {
-            setMinStartDate(new Date());
-            setMinEndDate(new Date());
-        }
-        setIsAddEventModal(true);
-    };
+   const editEvent = (data: any = null) => {
+    let params = JSON.parse(JSON.stringify(defaultParams));
+    setParams(params);
+    if (data) {
+        let obj = JSON.parse(JSON.stringify(data.event));
+        setParams({
+            id: obj.id,
+            title: obj.title,
+            start: dateFormat(obj.start),
+            end: dateFormat(obj.end),
+            type: obj.classNames ? obj.classNames[0] : 'primary',
+            description: obj.extendedProps?.description || '',
+            assignees: obj.extendedProps?.assignees || []
+        });
+        setMinStartDate(new Date());
+        setMinEndDate(dateFormat(obj.start));
+    } else {
+        setMinStartDate(new Date());
+        setMinEndDate(new Date());
+    }
+    setIsAddEventModal(true);
+};
 
     const editDate = (data: any) => {
         let obj = {
@@ -90,27 +167,50 @@ const Calendar = () => {
         editEvent(obj);
     };
 
-    const saveEvent = async () => {
-        if (!params.title || !params.start || !params.end) {
-            showMessage('Please fill all required fields', 'error');
-            return;
+const saveEvent = async () => {
+    if (!params.title || !params.start || !params.end) {
+        showMessage('Please fill all required fields', 'error');
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        const eventData = {
+            title: params.title,
+            description: params.description,
+            start: params.start,
+            end: params.end,
+            type: params.type || 'primary',
+            assignees: params.assignees || []
+        };
+
+        const config = {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        };
+
+        let response;
+        if (params.id) {
+            response = await axios.put(`http://localhost:5000/api/events/${params.id}`, eventData, config);
+        } else {
+            response = await axios.post('http://localhost:5000/api/events', eventData, config);
         }
 
-        try {
-            if (params.id) {
-                await axios.put(`http://localhost:5000/api/events/${params.id}`, params);
-                showMessage('Event updated successfully');
-            } else {
-                await axios.post('http://localhost:5000/api/events', params);
-                showMessage('Event created successfully');
-            }
-            setIsAddEventModal(false);
-            fetchEvents();
-        } catch (error) {
-            console.error('Error saving event:', error);
-            showMessage('Failed to save event', 'error');
+        showMessage(params.id ? 'Event updated successfully' : 'Event created successfully');
+        setIsAddEventModal(false);
+        await fetchEvents();
+    } catch (error: any) {
+        console.error('Error saving event:', error);
+        let errorMessage = 'Failed to save event';
+        if (error.response && error.response.data && error.response.data.error) {
+            errorMessage = error.response.data.error;
         }
-    };
+        showMessage(errorMessage, 'error');
+    }
+};
+
 
     const startDateChange = (event: any) => {
         const dateStr = event.target.value;
@@ -119,11 +219,10 @@ const Calendar = () => {
             setParams({ ...params, start: dateStr, end: '' });
         }
     };
-
-    const changeValue = (e: any) => {
-        const { value, id } = e.target;
-        setParams({ ...params, [id]: value });
-    };
+const changeValue = (e: any) => {
+    const { value, id } = e.target;
+    setParams({ ...params, [id]: value });
+};
 
     const showMessage = (msg = '', type = 'success') => {
         const toast: any = Swal.mixin({
@@ -139,6 +238,31 @@ const Calendar = () => {
             padding: '10px 20px',
         });
     };
+
+    const [users, setUsers] = useState<any[]>([]);
+    // Add this useEffect to fetch users
+useEffect(() => {
+    const fetchUsers = async () => {
+        try {
+            // Get the logged-in user's ID
+            const userId = localStorage.getItem('userId');
+            setLoggedInUserId(userId);
+            
+            // Get the token for authorization
+            const token = localStorage.getItem('token');
+            
+            const response = await axios.get('http://localhost:5000/api/users', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setUsers(response.data);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        }
+    };
+    fetchUsers();
+}, []);
 
     return (
         <div>
@@ -247,6 +371,15 @@ const Calendar = () => {
                                                 />
                                             </div>
 
+        <div>
+    <label>Select Assignees:</label>
+    <MultiSelect
+        options={users}
+        selected={params.assignees || []}
+        onChange={(selected) => setParams({ ...params, assignees: selected })}
+        placeholder="Select assignees..."
+    />
+</div>
                                             <div>
                                                 <label htmlFor="dateStart">From :</label>
                                                 <input

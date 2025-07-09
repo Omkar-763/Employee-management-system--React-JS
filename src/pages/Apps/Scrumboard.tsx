@@ -1,3 +1,4 @@
+
 import Dropdown from '../../components/Dropdown';
 import { useDispatch, useSelector } from 'react-redux';
 import { ReactSortable } from 'react-sortablejs';
@@ -17,72 +18,69 @@ import IconX from '../../components/Icon/IconX';
 
 const Scrumboard = () => {
     const dispatch = useDispatch();
+    const [projectList, setProjectList] = useState<any[]>([]);
+   
+
+
     useEffect(() => {
         dispatch(setPageTitle('Scrumboard'));
     });
-    const [projectList, setProjectList] = useState<any>([
-        {
-            id: 1,
-            title: 'In Progress',
-            tasks: [
-                {
-                    projectId: 1,
-                    id: 1,
-                    title: 'Creating a new Portfolio on Dribble',
-                    description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit.',
-                    image: true,
-                    date: ' 08 Aug, 2020',
-                    tags: ['designing'],
-                },
-                {
-                    projectId: 1,
-                    id: 2,
-                    title: 'Singapore Team Meet',
-                    description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit.',
-                    date: ' 09 Aug, 2020',
-                    tags: ['meeting'],
-                },
-            ],
-        },
-        {
-            id: 2,
-            title: 'Pending',
-            tasks: [
-                {
-                    projectId: 2,
-                    id: 3,
-                    title: 'Plan a trip to another country',
-                    description: '',
-                    date: ' 10 Sep, 2020',
-                },
-            ],
-        },
-        {
-            id: 3,
-            title: 'Complete',
-            tasks: [
-                {
-                    projectId: 3,
-                    id: 4,
-                    title: 'Dinner with Kelly Young',
-                    description: '',
-                    date: ' 08 Aug, 2020',
-                },
-                {
-                    projectId: 3,
-                    id: 5,
-                    title: 'Launch New SEO Wordpress Theme ',
-                    description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-                    date: ' 09 Aug, 2020',
-                },
-            ],
-        },
-        {
-            id: 4,
-            title: 'Working',
-            tasks: [],
-        },
-    ]);
+
+    // This function for fetching all the projects from the datbase in the Add Task 
+    useEffect(() => {
+    fetchProjectListFromDB();
+}, []);
+
+useEffect(() => {
+    fetchStatusListFromDB();
+}, []);
+
+
+useEffect(() => {
+    fetchColumnsFromDB(); // 🔥 Only runs once
+}, []);
+
+
+const fetchStatusListFromDB = async () => {
+    try {
+        const response = await fetch('http://localhost:5000/api/columns');
+        const data = await response.json();
+        setAllStatuses(data); // store statuses for dropdown
+    } catch (err) {
+        console.error('Failed to load statuses:', err);
+    }
+};
+
+
+
+
+
+const [allProjects, setAllProjects] = useState<any[]>([]);
+ const [allStatuses, setAllStatuses] = useState<any[]>([]);
+
+const fetchProjectListFromDB = async () => {
+    try {
+        
+        const response = await fetch('http://localhost:5000/api/project_task');
+        const data = await response.json();
+        setAllProjects(data); // ⬅️ store in state
+    } catch (err) {
+        console.error('Failed to load projects:', err);
+    }
+};
+
+
+const fetchColumnsFromDB = async () => {
+    try {
+        const response = await fetch('http://localhost:5000/api/columns-with-tasks');
+        const data = await response.json();
+        setProjectList(data); // ✅ Includes tasks now
+    } catch (err) {
+        console.error('Failed to load columns:', err);
+    }
+};
+
+    
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
     const changeValue = (e: any) => {
         const { value, id } = e.target;
@@ -91,6 +89,7 @@ const Scrumboard = () => {
     const [params, setParams] = useState<any>({
         id: null,
         title: '',
+        
     });
     const [paramsTask, setParamsTask] = useState<any>({
         projectId: null,
@@ -120,46 +119,46 @@ const Scrumboard = () => {
         });
     };
 
-    const showMessage = (msg = '', type = 'success') => {
-        const toast: any = Swal.mixin({
-            toast: true,
-            position: 'top',
-            showConfirmButton: false,
-            timer: 3000,
-            customClass: { container: 'toast' },
+ const showMessage = (msg = '', type: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success') => {
+    Swal.fire({
+        icon: type,
+        title: msg,
+        toast: true,
+        position: 'top',
+        showConfirmButton: false,
+        timer: 1500,
+        timerProgressBar: true,
+    });
+};
+
+
+
+    const saveProject = async () => {
+    if (!params.title) {
+        showMessage('Title is required.', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('http://localhost:5000/api/project_task', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: params.title })
         });
-        toast.fire({
-            icon: type,
-            title: msg,
-            padding: '10px 20px',
-        });
-    };
 
-    const saveProject = () => {
-        if (!params.title) {
-            showMessage('Title is required.', 'error');
-            return false;
-        }
+        if (!response.ok) throw new Error('Failed to add project');
 
-        if (params.id) {
-            //update project
-            const project = projectList.find((d: any) => d.id === params.id);
-            project.title = params.title;
-        } else {
-            //add project
-            const lastId = projectList.reduce((max: number, obj: any) => (obj.id > max ? obj.id : max), projectList[0].id) || 0;
+     await response.json(); // we no longer use this data to update the UI
+     await fetchProjectListFromDB(); // ✅ Refresh project list in dropdown
 
-            const project = {
-                id: lastId + 1,
-                title: params.title,
-                tasks: [],
-            };
-            projectList.push(project);
-        }
-
-        showMessage('Project has been saved successfully.');
+        showMessage('Project added successfully!', 'success');
         setIsAddProjectModal(false);
-    };
+    } catch (err) {
+        showMessage('Error saving project.', 'error');
+        console.error(err);
+    }
+};
+
 
     const deleteProject = (project: any) => {
         setProjectList(projectList.filter((d: any) => d.id !== project.id));
@@ -175,60 +174,90 @@ const Scrumboard = () => {
         setParamsTask({ ...paramsTask, [id]: value });
     };
 
-    const addEditTask = (projectId: any, task: any = null) => {
+    const today = new Date();
+const dd = String(today.getDate()).padStart(2, '0');
+const mm = String(today.getMonth()); // January is 0!
+const yyyy = today.getFullYear();
+const monthNames: any = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const formattedDate = dd + ' ' + monthNames[mm] + ', ' + yyyy;
+
+   const addEditTask = (statusId: any, task: any = null) => {
+    if (task) {
+        let data = JSON.parse(JSON.stringify(task));
+        data.statusId = statusId; // status is the column you're editing from
+        data.tags = data.tags ? data.tags.toString() : '';
+        setParamsTask(data);
+    } else {
         setParamsTask({
-            projectId: projectId,
+            statusId: statusId,
+            projectId: '',       // will be selected from dropdown
+            id: null,
+            title: '',
+            description: '',
+            tags: '',
+            date: formattedDate,
+        });
+    }
+
+    setIsAddTaskModal(true);
+};
+
+
+   const saveTask = async () => {
+    if (!paramsTask.title || !paramsTask.projectId) {
+        showMessage('Title and Project are required.', 'error');
+        return;
+    }
+
+    const taskData = {
+        title: paramsTask.title,
+        description: paramsTask.description,
+        tags: paramsTask.tags,
+        date: paramsTask.date,
+        projectId: paramsTask.projectId,
+        statusId: paramsTask.statusId,
+    };
+
+    try {
+        let response;
+        if (paramsTask.id) {
+            // Update existing task
+            response = await fetch(`http://localhost:5000/api/tasks/${paramsTask.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(taskData),
+            });
+        } else {
+            // Create new task
+            response = await fetch('http://localhost:5000/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(taskData),
+            });
+        }
+
+        if (!response.ok) throw new Error('Failed to save task');
+
+        await fetchColumnsFromDB(); // ✅ Refresh the UI
+        showMessage(paramsTask.id ? 'Task updated!' : 'Task added!');
+        setIsAddTaskModal(false);
+
+        setParamsTask({
+            projectId: null,
             id: null,
             title: '',
             description: '',
             tags: '',
             date: '',
+            statusId: null,
         });
-        if (task) {
-            let data = JSON.parse(JSON.stringify(task));
-            data.projectId = projectId;
-            data.tags = data.tags ? data.tags.toString() : '';
-            setParamsTask(data);
-        }
-        setIsAddTaskModal(true);
-    };
+    } catch (err) {
+        console.error(err);
+        showMessage('Error saving task', 'error');
+    }
+};
 
-    const saveTask = () => {
-        if (!paramsTask.title) {
-            showMessage('Title is required.', 'error');
-            return false;
-        }
-        const project: any = projectList.find((d: any) => d.id === paramsTask.projectId);
-        if (paramsTask.id) {
-            //update task
-            const task = project.tasks.find((d: any) => d.id === paramsTask.id);
-            task.title = paramsTask.title;
-            task.description = paramsTask.description;
-            task.tags = paramsTask.tags?.length > 0 ? paramsTask.tags.split(',') : [];
-        } else {
-            //add task
-            let maxId = 0;
-            maxId = project.tasks?.length ? project.tasks.reduce((max: number, obj: any) => (obj.id > max ? obj.id : max), project.tasks[0].id) : 0;
 
-            const today = new Date();
-            const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth()); //January is 0!
-            const yyyy = today.getFullYear();
-            const monthNames: any = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const task = {
-                projectId: paramsTask.projectId,
-                id: maxId + 1,
-                title: paramsTask.title,
-                description: paramsTask.description,
-                date: dd + ' ' + monthNames[mm] + ', ' + yyyy,
-                tags: paramsTask.tags?.length > 0 ? paramsTask.tags.split(',') : [],
-            };
-            setParamsTask(project.tasks.push(task));
-        }
-
-        showMessage('Task has been saved successfully.');
-        setIsAddTaskModal(false);
-    };
 
     const deleteConfirmModal = (projectId: any, task: any = null) => {
         setSelectedTask(task);
@@ -236,26 +265,33 @@ const Scrumboard = () => {
             setIsDeleteModal(true);
         }, 10);
     };
-    const deleteTask = () => {
+   const deleteTask = async () => {
+    try {
+        const response = await fetch(`http://localhost:5000/api/tasks/${selectedTask.id}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete task');
+        }
+
+        // Remove task from UI after successful deletion
         let project = projectList.find((d: any) => d.id === selectedTask.projectId);
         project.tasks = project.tasks.filter((d: any) => d.id !== selectedTask.id);
-        showMessage('Task has been deleted successfully.');
+        setProjectList([...projectList]); // ⬅️ force UI update
         setIsDeleteModal(false);
-    };
+        showMessage('Task has been deleted successfully.');
+    } catch (err) {
+        console.error(err);
+        showMessage('Error deleting task', 'error');
+    }
+};
+
 
     return (
         <div>
             <div>
-                <button
-                    type="button"
-                    className="btn btn-primary flex"
-                    onClick={() => {
-                        addEditProject();
-                    }}
-                >
-                    <IconPlus className="w-5 h-5 ltr:mr-3 rtl:ml-3" />
-                    Add Project
-                </button>
+               
             </div>
             {/* project list  */}
             <div className="relative pt-5">
@@ -278,16 +314,6 @@ const Scrumboard = () => {
                                                     button={<IconHorizontalDots className="opacity-70 hover:opacity-100" />}
                                                 >
                                                     <ul>
-                                                        <li>
-                                                            <button type="button" onClick={() => addEditProject(project)}>
-                                                                Edit
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button type="button" onClick={() => deleteProject(project)}>
-                                                                Delete
-                                                            </button>
-                                                        </li>
                                                         <li>
                                                             <button type="button" onClick={() => clearProjects(project)}>
                                                                 Clear All
@@ -324,6 +350,12 @@ const Scrumboard = () => {
                                                 <div className="sortable-list " key={project.id + '' + task.id}>
                                                     <div className="shadow bg-[#f4f4f4] dark:bg-white-dark/20 p-3 pb-5 rounded-md mb-5 space-y-3 cursor-move">
                                                         {task.image ? <img src="/assets/images/carousel1.jpeg" alt="images" className="h-32 w-full object-cover rounded-md" /> : ''}
+                                                        {task.projectName && (
+    <p className="text-xs font-semibold text-gray-600">
+        Project: {task.projectName}
+    </p>
+)}
+
                                                         <div className="text-base font-medium">{task.title}</div>
                                                         <p className="break-all">{task.description}</p>
                                                         <div className="flex gap-2 items-center flex-wrap">
@@ -403,7 +435,13 @@ const Scrumboard = () => {
                                         {params.id ? 'Edit Project' : 'Add Project'}
                                     </div>
                                     <div className="p-5">
-                                        <form onSubmit={saveProject}>
+                                        <form
+    onSubmit={(e) => {
+        e.preventDefault();
+        saveProject();
+    }}
+>
+
                                             <div className="grid gap-5">
                                                 <div>
                                                     <label htmlFor="title">Name</label>
@@ -443,6 +481,42 @@ const Scrumboard = () => {
                                 <div className="p-5">
                                     <form onSubmit={saveTask}>
                                         <div className="grid gap-5">
+                                            {/* foe adding the projects name in the datbase to the dropdown  */}
+                                            <div>
+    <label htmlFor="projectId">Project Name</label>
+    <select
+        id="projectId"
+        value={paramsTask.projectId || ''}
+        onChange={(e) => setParamsTask({ ...paramsTask, projectId: parseInt(e.target.value) })}
+        className="form-select"
+    >
+        <option value="">Select Project</option>
+        {allProjects.map((proj) => (
+            <option key={proj.id} value={proj.id}>
+                {proj.name}
+            </option>
+        ))}
+    </select>
+</div>
+
+<div>
+    <label htmlFor="statusId">Project Status</label>
+    <select
+        id="statusId"
+        value={paramsTask.statusId || ''}
+        onChange={(e) => setParamsTask({ ...paramsTask, statusId: parseInt(e.target.value) })}
+        className="form-select"
+    >
+        <option value="">Select Status</option>
+        {allStatuses.map((status) => (
+            <option key={status.id} value={status.id}>
+                {status.name}
+            </option>
+        ))}
+    </select>
+</div>
+
+
                                             <div>
                                                 <label htmlFor="taskTitle">Name</label>
                                                 <input id="title" value={paramsTask.title} onChange={addTaskData} type="text" className="form-input" placeholder="Enter Name" />
@@ -451,6 +525,17 @@ const Scrumboard = () => {
                                                 <label htmlFor="taskTag">Tag</label>
                                                 <input id="tags" value={paramsTask.tags} onChange={addTaskData} type="text" className="form-input" placeholder="Enter Tag" />
                                             </div>
+                                                                               <div>
+    <label htmlFor="taskDate">Date</label>
+    <input
+        id="date"
+        value={paramsTask.date}
+        onChange={addTaskData}
+        type="text"
+        className="form-input"
+        readOnly
+    />
+</div>
                                             <div>
                                                 <label htmlFor="taskdesc">Description</label>
                                                 <textarea
@@ -536,3 +621,7 @@ const Scrumboard = () => {
     );
 };
 export default Scrumboard;
+
+
+
+

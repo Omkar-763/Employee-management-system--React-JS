@@ -25,6 +25,7 @@ router.post('/register', async (req, res) => {
             
             db.query('SELECT COUNT(*) as count FROM users', (err, countResults) => {
                 const is_admin = countResults[0].count === 0;
+                 const role = is_admin ? 'admin' : 'user'; // changed line
                 
                 db.query(
                     'INSERT INTO users (name, email, password, is_admin) VALUES (?, ?, ?, ?)',
@@ -70,6 +71,8 @@ router.post('/login', (req, res) => {
         const validPassword = await bcrypt.compare(password, user.password);
         if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' });
 
+
+        const role = user.is_admin ? 'admin' : 'user';  //changed line 
         const token = jwt.sign(
             { id: user.id, email: user.email, is_admin: user.is_admin },
             SECRET_KEY,
@@ -89,6 +92,7 @@ router.post('/login', (req, res) => {
     });
 });
 
+
 // Get user info
 router.get('/user-info', authenticateToken, (req, res) => {
     db.query(
@@ -97,6 +101,8 @@ router.get('/user-info', authenticateToken, (req, res) => {
         (err, results) => {
             if (err) return res.status(500).json({ error: 'Database error' });
             if (results.length === 0) return res.status(404).json({ error: 'User not found' });
+
+               const role = results[0].is_admin ? 'admin' : 'user'; //changes line
 
             res.json({
                 id: results[0].id,

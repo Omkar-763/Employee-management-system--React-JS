@@ -35,20 +35,28 @@ const LoginBoxed = () => {
                 password: formData.password
             });
 
+        
+
             setLoading(false);
 
-            if (response.data.token) {
-                // Store token and user role
-                localStorage.setItem('token', response.data.token);
-                localStorage.setItem('isAdmin', JSON.stringify(response.data.isAdmin));
+          if (response.data.token && response.data.user) {
+    // Store token and user role
+    const user = response.data.user;
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('isAdmin', JSON.stringify(response.data.isAdmin));
+    localStorage.setItem('userName', response.data.user.name);
+    localStorage.setItem('userId', response.data.user.id); 
 
-                // Redirect based on role
-                if (response.data.isAdmin) {
-                    navigate('/'); // Redirect admin
-                } else {
-                    navigate('/apps/chats'); // Redirect user
-                }
-            }
+    localStorage.setItem('user', JSON.stringify(user));
+
+    // Redirect based on role
+    if (response.data.isAdmin) {
+        navigate('/'); // Redirect admin
+    } else {
+        navigate('/apps/feed'); // Redirect user
+    }
+}
+
         } catch (err: any) {
             setLoading(false);
             setError(err.response?.data?.error || 'Login failed. Please try again.');
