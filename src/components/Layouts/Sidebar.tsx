@@ -1,5 +1,3 @@
-
-
 import PerfectScrollbar from 'react-perfect-scrollbar';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
@@ -40,9 +38,9 @@ const Sidebar = () => {
                 }
 
                 const response = await axios.get('http://localhost:5000/user-info', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { Authorization: `Bearer ${token}` },
                 });
-                
+
                 setIsAdmin(response.data.is_admin === 1 || response.data.is_admin === true);
                 setUserEmail(response.data.email);
             } catch (error) {
@@ -81,44 +79,39 @@ const Sidebar = () => {
         { path: '/apps/scrumboard', icon: <IconMenuScrumboard className="w-5 h-5" />, label: 'Scrumboard' },
         { path: '/apps/calendar', icon: <IconMenuCalendar className="w-5 h-5" />, label: 'Calendar' },
         { path: '/apps/approvals', icon: <IconFile className="w-5 h-5" />, label: 'Approvals' },
-         { path: '/apps/attendance', icon: <IconChecks className="w-5 h-5" />, label: 'Attendance' }
+        { path: '/apps/attendance', icon: <IconChecks className="w-5 h-5" />, label: 'Attendance' },
     ];
 
     // Admin specific items
     const adminItems = [
         { path: '/admin/users', icon: <IconBook className="w-5 h-5" />, label: 'Manage Users' },
         { path: '/admin/reports', icon: <IconFile className="w-5 h-5" />, label: 'Reports' },
-        { path: '/admin/AdminApprovals', icon: <IconChecks className="w-5 h-5" />, label: 'Admin Approvals' }
+        { path: '/admin/AdminApprovals', icon: <IconChecks className="w-5 h-5" />, label: 'Admin Approvals' },
     ];
 
-
-  return (
-     <div className="sidebar fixed h-screen w-[260px] shadow-lg z-50 bg-white dark:bg-gray-800 flex flex-col hide-debug-text">
-        {/* Header - Fixed height */}
-        <div className="flex-shrink-0 flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <IconTrackory className="h-48 w-48 text-primary" />
-            <button
-                type="button"
-                className="collapse-icon w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-                onClick={() => dispatch(toggleSidebar())}
-            >
-                <IconCaretsDown className="w-4 h-4 rotate-90 text-gray-500 dark:text-gray-400" />
-            </button>
-        </div>
-
-        {/* User email - Fixed height */}
-        {userEmail && (
-            <div className="flex-shrink-0 px-6 py-3 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
-                {userEmail}
+    return (
+        <div className="sidebar fixed h-screen w-[260px] shadow-lg z-50 bg-white dark:bg-gray-800 flex flex-col hide-debug-text">
+            {/* Header - Fixed height */}
+            <div className="flex-shrink-0 flex justify-between items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                <IconTrackory className="h-8 w-32 text-primary" />
+                <button
+                    type="button"
+                    className="collapse-icon w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+                    onClick={() => dispatch(toggleSidebar())}
+                >
+                    <IconCaretsDown className="w-4 h-4 rotate-90 text-gray-500 dark:text-gray-400" />
+                </button>
             </div>
-        )}
 
-        {/* Scrollable content area */}
-       <div className="flex-1 overflow-hidden">
-    <PerfectScrollbar className="h-full" options={{ suppressScrollX: true }}>
-        <div className="p-4">
-                {/* Dashboard */}
-                <NavLink 
+            {/* User email - Fixed height */}
+            {userEmail && <div className="flex-shrink-0 px-6 py-3 text-sm text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">{userEmail}</div>}
+
+            {/* Scrollable content area */}
+            <div className="flex-1 overflow-hidden">
+                <PerfectScrollbar className="h-full" options={{ suppressScrollX: true }}>
+                    <div className="p-4">
+                        {/* Dashboard */}
+                        {/* <NavLink 
                     to="/" 
                     className={({ isActive }) => 
                         `flex items-center px-3 py-2.5 rounded-lg mb-1 ${isActive ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
@@ -126,63 +119,60 @@ const Sidebar = () => {
                 >
                     <IconHome className="w-5 h-5" />
                     <span className="ml-3 font-medium">Dashboard</span>
-                </NavLink>
+                </NavLink> */}
 
-                {/* Apps Section */}
-                <div className="mt-6">
-                    <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                        Apps
-                    </h3>
-                    <div className="space-y-1">
-                        {commonApps.map((app, index) => (
-                            <NavLink
-                                key={index}
-                                to={app.path}
-                                className={({ isActive }) => 
-                                    `flex items-center px-3 py-2.5 rounded-lg ${isActive ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
-                                }
-                            >
-                                {app.icon}
-                                <span className="ml-3 font-medium">{app.label}</span>
-                            </NavLink>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Admin Section */}
-                {isAdmin && (
-                    <div className="mt-6">
-                        <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-                            Admin
-                        </h3>
-                        <div className="space-y-1">
-                            {adminItems.map((item, index) => (
-                                <NavLink
-                                    key={`admin-${index}`}
-                                    to={item.path}
-                                    className={({ isActive }) => 
-                                        `flex items-center px-3 py-2.5 rounded-lg ${isActive ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`
-                                    }
-                                >
-                                    {item.icon}
-                                    <span className="ml-3 font-medium">{item.label}</span>
-                                </NavLink>
-                            ))}
+                        {/* Apps Section */}
+                        <div className="mt-6">
+                            <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Apps</h3>
+                            <div className="space-y-1">
+                                {commonApps.map((app, index) => (
+                                    <NavLink
+                                        key={index}
+                                        to={app.path}
+                                        className={({ isActive }) =>
+                                            `flex items-center px-3 py-2.5 rounded-lg ${
+                                                isActive
+                                                    ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                                                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                            }`
+                                        }
+                                    >
+                                        {app.icon}
+                                        <span className="ml-3 font-medium">{app.label}</span>
+                                    </NavLink>
+                                ))}
+                            </div>
                         </div>
+
+                        {/* Admin Section */}
+                        {isAdmin && (
+                            <div className="mt-6">
+                                <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Admin</h3>
+                                <div className="space-y-1">
+                                    {adminItems.map((item, index) => (
+                                        <NavLink
+                                            key={`admin-${index}`}
+                                            to={item.path}
+                                            className={({ isActive }) =>
+                                                `flex items-center px-3 py-2.5 rounded-lg ${
+                                                    isActive
+                                                        ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400'
+                                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                }`
+                                            }
+                                        >
+                                            {item.icon}
+                                            <span className="ml-3 font-medium">{item.label}</span>
+                                        </NavLink>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+                </PerfectScrollbar>
             </div>
-            </PerfectScrollbar>
         </div>
-    </div>
-);
-      
+    );
 };
 
 export default Sidebar;
-
-
-
-
-
-
