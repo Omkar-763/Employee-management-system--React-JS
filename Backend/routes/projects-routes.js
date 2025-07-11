@@ -56,6 +56,7 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // POST a new project task
+// POST a new project task
 router.post('/', authenticateToken, (req, res) => {
     const { name, startDate, endDate } = req.body;
     const userId = req.user.id;
@@ -68,31 +69,34 @@ router.post('/', authenticateToken, (req, res) => {
         return res.status(400).json({ error: 'End date must be after start date' });
     }
 
+    // Fix: Add user_id to the INSERT query
     const query = `
         INSERT INTO project_task (user_id, name, start_date, end_date)
         VALUES (?, ?, ?, ?)
     `;
 
+    // Fix: Include userId in the parameters
     db.query(query, [userId, name, startDate, endDate], (err, result) => {
         if (err) {
             console.error(' Insert error:', err);
             return res.status(500).json({ error: 'Insert failed', details: err.message });
         }
 
-        res.json({
-            success: true,
-            message: 'Project task created successfully',
-            data: {
-                id: result.insertId,
-                name,
-                startDate,
-                endDate,
-                createdAt: new Date().toISOString(),
-                isDeleted: false,
-                userName: req.user.name,
-                userEmail: req.user.email
-            }
-        });
+      res.json({
+  success: true,
+  message: 'Project task created successfully',
+  data: {
+    id: result.insertId,
+    name,
+    startDate,
+    endDate,
+    createdAt: new Date().toISOString(),
+    isDeleted: false,
+    userName: req.user.name,
+    userEmail: req.user.email
+  }
+});
+
     });
 });
 

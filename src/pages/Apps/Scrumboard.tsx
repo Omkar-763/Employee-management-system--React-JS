@@ -291,16 +291,7 @@ const formattedDate = dd + ' ' + monthNames[mm] + ', ' + yyyy;
     return (
         <div>
             <div>
-                <button
-                    type="button"
-                    className="btn btn-primary flex"
-                    onClick={() => {
-                        addEditProject();
-                    }}
-                >
-                    <IconPlus className="w-5 h-5 ltr:mr-3 rtl:ml-3" />
-                    Add Project
-                </button>
+               
             </div>
             {/* project list  */}
             <div className="relative pt-5">

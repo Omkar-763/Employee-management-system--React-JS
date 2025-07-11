@@ -1,38 +1,29 @@
+// routes/user-routes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { authenticateToken } = require('../middleware/auth-middleware');
 
-router.get('/users/names', (req, res) => {
-    db.query('SELECT name FROM users', (err, results) => {
-        if (err) return res.status(500).json({ error: 'Database error' });
-        res.json(results.map(user => user.name));
-    });
-});
-
 // Get all users (admin only)
-// Fix the SQL query to properly select fields
-router.get('/users', authenticateToken, (req, res) => {
+router.get('/', authenticateToken, (req, res) => {
     if (!req.user.is_admin) {
         return res.status(403).json({ error: 'Unauthorized' });
     }
 
     db.query(
-      'SELECT id, name, email, is_admin, created_at FROM users',
+        'SELECT id, name, email, is_admin, created_at FROM users ORDER BY created_at DESC',
         (err, results) => {
             if (err) {
                 console.error('Error fetching users:', err);
                 return res.status(500).json({ error: 'Database error' });
             }
-            console.log('Backend users data:', results);
             res.json(results);
         }
     );
 });
 
 // Update user information (admin only)
-// Update user information (admin only)
-router.put('/users/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, (req, res) => {
     if (!req.user.is_admin) {
         return res.status(403).json({ error: 'Unauthorized' });
     }
@@ -40,9 +31,14 @@ router.put('/users/:id', authenticateToken, (req, res) => {
     const { id } = req.params;
     const { name, email, is_admin } = req.body;
 
-    // Add proper validation
-    if (!name || !email) {
-        return res.status(400).json({ error: 'Name and email are required' });
+    // Prevent updating the primary admin's admin status
+    if (id == 1 && is_admin === false) {
+        return res.status(400).json({ error: 'Cannot demote primary admin' });
+    }
+
+    // Prevent users from updating themselves
+    if (id == req.user.id) {
+        return res.status(400).json({ error: 'Cannot update your own account' });
     }
 
     db.query(
@@ -60,8 +56,9 @@ router.put('/users/:id', authenticateToken, (req, res) => {
         }
     );
 });
+
 // Delete user (admin only)
-router.delete('/users/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateToken, (req, res) => {
     if (!req.user.is_admin) {
         return res.status(403).json({ error: 'Unauthorized' });
     }
@@ -95,7 +92,7 @@ router.delete('/users/:id', authenticateToken, (req, res) => {
 });
 
 // Update admin status (admin only)
-router.patch('/users/:id/admin-status', authenticateToken, (req, res) => {
+router.patch('/:id/admin-status', authenticateToken, (req, res) => {
     if (!req.user.is_admin) {
         return res.status(403).json({ error: 'Unauthorized' });
     }

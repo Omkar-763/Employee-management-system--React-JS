@@ -1,5 +1,7 @@
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
+
+// Perfect Scrollbar
 import 'react-perfect-scrollbar/dist/css/styles.css';
 import './tailwind.css';
 import './i18n';
@@ -7,16 +9,16 @@ import { RouterProvider } from 'react-router-dom';
 import router from './router/index';
 import { Provider } from 'react-redux';
 import store from './store/index';
-import { AuthProvider } from './pages/context/authContext'; // Adjust the import path as needed
+// import { AuthProvider } from './pages/context/AuthContext';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
     <React.StrictMode>
-        <Provider store={store}>
-            <AuthProvider>
-                <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
-                    <RouterProvider router={router} />
-                </Suspense>
-            </AuthProvider>
-        </Provider>
+        <Suspense>
+            {/* <AuthProvider> */}
+            <Provider store={store}>
+                <RouterProvider router={router} />
+            </Provider>
+            {/* </AuthProvider> */}
+        </Suspense>
     </React.StrictMode>
 );
